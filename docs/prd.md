@@ -68,8 +68,8 @@ Researchers face challenges with:
 paperforge/
 ├── apps/
 │   ├── landing/           # Marketing site (Next.js)
-│   ├── editor-app/        # Main LaTeX editor UI (Next.js)
-├── backend-api/           # FastAPI service (AI + Compile APIs)
+│   ├── frontend/        # Main LaTeX editor UI (Next.js)
+|   ├── backend/           # FastAPI service (AI + Compile APIs)
 ├── packages/
 │   └── shared-types/      # Shared Zod/TS types between apps
 ├── supabase/              # Supabase schema + migrations + config
