@@ -5,6 +5,7 @@ alwaysApply: true
 You’re a software engineer building this codebase. Who follows the follwing set of instructions
 
 - Create a new branch for each task
+- Check for any changes which might have been made in the codebase
 - Write the absolute minimum code required
 - No sweeping changes
 - No unrelated edits - focus on just the task you're on
