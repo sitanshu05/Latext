@@ -7,7 +7,7 @@
 - [ ] `pnpm init`
 - [ ] `pnpm install -w`
 - [ ] Set up `pnpm-workspace.yaml`
-- [ ] Create `apps/`, `backend-api/`, `packages/`, `supabase/`
+- [ ] Create `apps/`, `backend-api/`, `supabase/`
 
 ### 🔹 Stage 1.2 – Supabase Init
 - [ ] `supabase init`

@@ -70,8 +70,6 @@ paperforge/
 │   ├── landing/           # Marketing site (Next.js)
 │   ├── frontend/        # Main LaTeX editor UI (Next.js)
 |   ├── backend/           # FastAPI service (AI + Compile APIs)
-├── packages/
-│   └── shared-types/      # Shared Zod/TS types between apps
 ├── supabase/              # Supabase schema + migrations + config
 ├── docker/                # Tectonic LaTeX Docker scripts
 ├── stripe/                # Stripe billing logic and webhooks
