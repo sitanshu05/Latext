@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+
 import { supabase } from '@/lib/services/supabase'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2 } from 'lucide-react'
 
 export default function AuthCallbackPage() {
   const [loading, setLoading] = useState(true)
@@ -43,10 +48,10 @@ export default function AuthCallbackPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Completing authentication...</p>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto" />
+          <p className="mt-4 text-muted-foreground">Completing authentication...</p>
         </div>
       </div>
     )
@@ -54,22 +59,24 @@ export default function AuthCallbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
-            <div className="text-red-600 text-lg font-medium mb-2">
-              Authentication Failed
-            </div>
-            <p className="text-red-700 text-sm mb-4">
-              {error}
-            </p>
-            <a 
-              href="/auth/login" 
-              className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-            >
-              Try Again
-            </a>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-destructive">Authentication Failed</CardTitle>
+              <CardDescription>
+                {error}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Link 
+                href="/auth/login" 
+                className="text-sm text-primary hover:underline"
+              >
+                Try Again
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )

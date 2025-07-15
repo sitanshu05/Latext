@@ -1,57 +1,58 @@
 'use client'
 
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import Link from 'next/link'
+
 import { signUp } from '@/lib/services/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const signupSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+
+type SignupFormData = z.infer<typeof signupSchema>
 
 interface SignupFormProps {
   onSuccess?: () => void
 }
 
 export default function SignupForm({ onSuccess }: SignupFormProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const form = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  })
+
+  const onSubmit = async (data: SignupFormData) => {
     setLoading(true)
     setError('')
     setSuccess(false)
 
-    // Basic validation
-    if (!email || !password || !confirmPassword) {
-      setError('Please fill in all fields')
-      setLoading(false)
-      return
-    }
-
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address')
-      setLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
     try {
-      const { data, error: signUpError } = await signUp(email, password)
+      const { data: authData, error: signUpError } = await signUp(data.email, data.password)
       
       if (signUpError) {
         setError(signUpError.message)
-      } else if (data.user) {
+      } else if (authData.user) {
         setSuccess(true)
         if (onSuccess) {
           onSuccess()
@@ -67,102 +68,111 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
   if (success) {
     return (
       <div className="w-full max-w-md mx-auto">
-        <div className="bg-green-50 border border-green-200 rounded-md p-6 text-center">
-          <div className="text-green-600 text-lg font-medium mb-2">
-            Check your email!
-          </div>
-          <p className="text-green-700 text-sm">
-            We've sent you a confirmation email at <strong>{email}</strong>. 
-            Please click the link in the email to activate your account.
-          </p>
-          <div className="mt-4">
-            <a 
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-green-600">Check your email!</CardTitle>
+            <CardDescription>
+              We've sent you a confirmation email at <strong>{form.getValues().email}</strong>. 
+              Please click the link in the email to activate your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Link 
               href="/auth/login" 
-              className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+              className="text-sm text-muted-foreground hover:text-primary"
             >
               Back to Sign In
-            </a>
-          </div>
-        </div>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-            required
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password (min. 6 characters)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-            required
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Create a password (min. 6 characters)"
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-            Confirm Password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-            required
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Confirm your password"
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        {error && (
-          <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-            {error}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </Button>
+
+          <div className="text-center">
+            <span className="text-sm text-muted-foreground">Already have an account? </span>
+            <Link 
+              href="/auth/login" 
+              className="text-sm text-primary hover:underline"
+            >
+              Sign In
+            </Link>
           </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
-
-        <div className="text-center">
-          <span className="text-sm text-gray-600">Already have an account? </span>
-          <a 
-            href="/auth/login" 
-            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-          >
-            Sign In
-          </a>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   )
 } 

@@ -1,44 +1,52 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from '@/lib/services/auth'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import { signIn } from '@/lib/services/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 interface LoginFormProps {
   onSuccess?: () => void
 }
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
+
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true)
     setError('')
 
-    // Basic validation
-    if (!email || !password) {
-      setError('Please fill in all fields')
-      setLoading(false)
-      return
-    }
-
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address')
-      setLoading(false)
-      return
-    }
-
     try {
-      const { data, error: signInError } = await signIn(email, password)
+      const { data: authData, error: signInError } = await signIn(data.email, data.password)
       
       if (signInError) {
         setError(signInError.message)
-      } else if (data.user) {
+      } else if (authData.user) {
         // Success
         if (onSuccess) {
           onSuccess()
@@ -55,62 +63,68 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-            required
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-            required
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        {error && (
-          <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-            {error}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </Button>
+
+          <div className="text-center">
+            <Link 
+              href="/auth/forgot-password" 
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Forgot your password?
+            </Link>
           </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Signing In...' : 'Sign In'}
-        </button>
-
-        <div className="text-center">
-          <a 
-            href="/auth/forgot-password" 
-            className="text-sm text-blue-600 hover:text-blue-500"
-          >
-            Forgot your password?
-          </a>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   )
 } 

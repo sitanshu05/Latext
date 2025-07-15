@@ -1,14 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+
 import { updatePassword } from '@/lib/services/auth'
 import { supabase } from '@/lib/services/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -17,6 +35,14 @@ export default function ResetPasswordPage() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const form = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
+  })
 
   useEffect(() => {
     // Check if we have a valid session from the password reset link
@@ -38,31 +64,12 @@ export default function ResetPasswordPage() {
     checkSession()
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: ResetPasswordFormData) => {
     setLoading(true)
     setError('')
 
-    if (!password || !confirmPassword) {
-      setError('Please fill in all fields')
-      setLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
     try {
-      const { data, error: updateError } = await updatePassword(password)
+      const { data: authData, error: updateError } = await updatePassword(data.password)
       
       if (updateError) {
         setError(updateError.message)
@@ -78,11 +85,11 @@ export default function ResetPasswordPage() {
 
   if (sessionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-600">Verifying reset link...</p>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2 text-sm text-muted-foreground">Verifying reset link...</p>
           </div>
         </div>
       </div>
@@ -91,30 +98,34 @@ export default function ResetPasswordPage() {
 
   if (!hasValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
-            <div className="text-red-600 text-lg font-medium mb-2">
-              Invalid Reset Link
-            </div>
-            <p className="text-red-700 text-sm mb-4">
-              {error || 'This password reset link is invalid or has expired.'}
-            </p>
-            <div className="space-y-2">
-              <Link 
-                href="/auth/forgot-password" 
-                className="block text-blue-600 hover:text-blue-500 text-sm font-medium"
-              >
-                Request New Reset Link
-              </Link>
-              <Link 
-                href="/auth/login" 
-                className="block text-blue-600 hover:text-blue-500 text-sm font-medium"
-              >
-                Back to Sign In
-              </Link>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-destructive">Invalid Reset Link</CardTitle>
+              <CardDescription>
+                {error || 'This password reset link is invalid or has expired.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-2">
+              <div>
+                <Link 
+                  href="/auth/forgot-password" 
+                  className="text-sm text-primary hover:underline"
+                >
+                  Request New Reset Link
+                </Link>
+              </div>
+              <div>
+                <Link 
+                  href="/auth/login" 
+                  className="text-sm text-muted-foreground hover:text-primary"
+                >
+                  Back to Sign In
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -122,86 +133,94 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="bg-green-50 border border-green-200 rounded-md p-6 text-center">
-            <div className="text-green-600 text-lg font-medium mb-2">
-              Password Updated!
-            </div>
-            <p className="text-green-700 text-sm mb-4">
-              Your password has been successfully updated. You can now sign in with your new password.
-            </p>
-            <Link 
-              href="/auth/login" 
-              className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-            >
-              Go to Sign In
-            </Link>
-          </div>
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-green-600">Password Updated!</CardTitle>
+              <CardDescription>
+                Your password has been successfully updated. You can now sign in with your new password.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Link 
+                href="/auth/login" 
+                className="text-sm text-primary hover:underline"
+              >
+                Go to Sign In
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight">
             Reset your password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Enter your new password below
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              New Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your new password (min. 6 characters)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              disabled={loading}
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter your new password (min. 6 characters)"
+                      disabled={loading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm New Password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your new password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              disabled={loading}
-              required
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Confirm your new password"
+                      disabled={loading}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {error && (
-            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-              {error}
-            </div>
-          )}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Updating Password...' : 'Update Password'}
-          </button>
-        </form>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Updating Password...' : 'Update Password'}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   )

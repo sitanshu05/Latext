@@ -2,3 +2,6 @@
 description: A set of rules and instrucitons to be followed whenever creating a ui component, page etc.
 alwaysApply: false
 ---
+
+- Use shadcn for ui components
+- use react-lucide for all icons
