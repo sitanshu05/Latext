@@ -66,3 +66,8 @@ export const updatePassword = async (password: string) => {
   })
   return { data, error }
 } 
+
+export const logout = async () => {
+  const { error } = await supabase.auth.signOut()
+  return { error }
+}

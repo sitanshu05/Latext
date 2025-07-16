@@ -1,0 +1,7 @@
+---
+description: Set of rules which are to be used when dealing with supabase and anything related to supabase including backend and frontend 
+globs:
+alwaysApply: false
+---
+
+- Use declarative schema 

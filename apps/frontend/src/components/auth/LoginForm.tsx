@@ -51,7 +51,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         if (onSuccess) {
           onSuccess()
         } else {
-          router.push('/dashboard')
+          router.push('/')
         }
       }
     } catch (err) {
