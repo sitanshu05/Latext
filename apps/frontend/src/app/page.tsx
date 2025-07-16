@@ -6,11 +6,12 @@ import { getCurrentUser } from '@/lib/services/auth'
 import type { AuthUser } from '@/lib/services/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import LogoutButton from '@/components/auth/LogoutButton'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,6 +30,12 @@ export default function Home() {
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    if (user) {
+      router.push('/project')
+    }
+  }, [user])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -40,28 +47,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
-        {user ? (
-          // Authenticated user view
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome back!</CardTitle>
-              <CardDescription>
-                You are successfully signed in as {user.email}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                <p className="text-green-800 text-sm">
-                  ✅ You are authenticated
-                </p>
-              </div>
-              <div className="flex flex-col space-y-2">
-                <LogoutButton className="w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          // Unauthenticated user view
           <Card>
             <CardHeader>
               <CardTitle>Welcome to LaText</CardTitle>
@@ -85,7 +70,6 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        )}
       </div>
     </div>
   )

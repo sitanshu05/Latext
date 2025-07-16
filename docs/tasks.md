@@ -1,84 +1,101 @@
-# Authentication Setup Tasks
+# Projects Page Implementation Tasks - Fresh Start ✨
 
-## 1. Supabase Authentication Configuration
-- [ ] Configure authentication providers in Supabase dashboard
-  - [ ] Enable email/password authentication
-  - [ ] Enable Google OAuth provider
-  - [ ] Set up Google OAuth app credentials (client ID, secret)
-  - [ ] Configure redirect URLs for development and production
-- [ ] Set up authentication policies and RLS (Row Level Security)
-- [ ] Configure email templates for signup/reset password
+## Fresh Setup Status ✅
+- ✅ Local Supabase running on http://127.0.0.1:54321
+- ✅ Frontend configured with local credentials 
+- ✅ No migrations (clean slate)
+- ✅ No remote connections
+- ✅ Docker volumes cleared
 
-## 2. Frontend Dependencies & Setup
-- [x] Install Supabase client library (`@supabase/supabase-js`)
-- [x] Install additional auth dependencies if needed
-- [x] Create Supabase client configuration
-- [x] Set up environment variables for Supabase URL and anon key
+## Next Steps - Build from Scratch
 
-## 3. Authentication Context & Hooks
-- [ ] Create AuthContext for managing authentication state
-- [ ] Create useAuth hook for accessing auth methods
-- [ ] Implement session persistence and restoration
-- [ ] Handle authentication state changes
+### 1. Create Projects Table Migration
+- [ ] Create new migration: `npx supabase migration new create_projects_table`
+- [ ] Define projects schema with user relationship
+- [ ] Add RLS policies for user isolation
+- [ ] Apply migration locally
 
-## 4. Authentication Components
-- [x] Create LoginForm component
-  - [x] Email/password login fields
-  - [x] Form validation
-  - [x] Error handling
-  - [x] Loading states
-- [x] Create SignupForm component
-  - [x] Email/password signup fields
-  - [x] Form validation
-  - [x] Error handling
-  - [x] Email confirmation handling
-- [x] Create GoogleAuthButton component
-  - [x] Google OAuth integration
-  - [x] Error handling
-- [x] Create LogoutButton component
+### 2. Projects Service Layer
+- [ ] Create `src/lib/services/projects.ts`
+- [ ] Implement CRUD operations (create, read, update, delete)
+- [ ] Add TypeScript interfaces for Project type
+- [ ] Handle error cases and validation
 
-## 5. Authentication Pages
-- [x] Create login page (`/auth/login`)
-- [x] Create signup page (`/auth/signup`)
-- [x] Create forgot password page (`/auth/forgot-password`)
-- [x] Create reset password page (`/auth/reset-password`)
-- [x] Add navigation between auth pages
+### 3. Projects List Page
+- [ ] Create `/src/app/projects/page.tsx`
+- [ ] Add authentication check and redirect
+- [ ] Implement projects grid/list view
+- [ ] Add search and filter functionality
+- [ ] Add "New Project" button
 
-## 6. Protected Routes & Middleware
-- [ ] Create authentication middleware
-- [ ] Implement route protection logic
-- [ ] Handle unauthorized access redirects
-- [ ] Create authenticated layout wrapper
+### 4. Project Card Component
+- [ ] Create `ProjectCard.tsx` component
+- [ ] Display project title, last modified, created date
+- [ ] Add preview of content (first few lines)
+- [ ] Include action buttons (edit, delete, duplicate)
 
-## 7. User Profile & Account Management
-- [ ] Create user profile page
-- [ ] Implement password change functionality
-- [ ] Add account deletion option
-- [ ] Handle email verification
+### 5. New/Edit Project Modal
+- [ ] Create `CreateProjectModal.tsx` component
+- [ ] Add form validation for project title
+- [ ] Handle project creation with user_id
+- [ ] Add loading states and error handling
 
-## 8. Integration & Testing
-- [ ] Integrate authentication with existing pages
-- [ ] Add authentication checks to API routes
-- [ ] Test email/password signup and login flow
-- [ ] Test Google OAuth flow
-- [ ] Test password reset flow
-- [ ] Test session persistence across browser refreshes
-- [ ] Test logout functionality
+### 6. Project Editor Page
+- [ ] Create `/src/app/projects/[id]/page.tsx`
+- [ ] Load project data by ID
+- [ ] Integrate with Monaco Editor (if not already done)
+- [ ] Auto-save functionality
+- [ ] Real-time preview integration
 
-## 9. UI/UX Improvements
-- [ ] Style authentication forms with consistent design
-- [ ] Add loading spinners and error states
-- [ ] Implement proper form accessibility
-- [ ] Add responsive design for mobile devices
+### 7. Navigation Updates
+- [ ] Add "Projects" link to main navigation
+- [ ] Update layout to include projects navigation
+- [ ] Add breadcrumbs for project editor
 
-## 10. Security & Best Practices
-- [ ] Implement proper error handling without exposing sensitive info
-- [ ] Add rate limiting for authentication attempts
-- [ ] Ensure secure session management
-- [ ] Review and test authentication security
+### 8. UI Components
+- [ ] Empty state component for no projects
+- [ ] Loading skeletons for project cards
+- [ ] Confirmation dialogs for delete actions
+- [ ] Toast notifications for actions
 
-## Configuration Notes
-- **Supabase Dashboard**: Configure authentication settings
-- **Google Cloud Console**: Set up OAuth 2.0 credentials
-- **Environment Variables**: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
-- **Redirect URLs**: Add localhost:3000 for development, production domain for live site
+### 9. Testing & Polish
+- [ ] Test project CRUD operations
+- [ ] Test authentication flows
+- [ ] Responsive design verification
+- [ ] Error handling edge cases
+
+---
+
+## Schema Design for Projects Table
+
+```sql
+CREATE TABLE public.projects (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL DEFAULT '', -- LaTeX content
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own projects" ON public.projects
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own projects" ON public.projects
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own projects" ON public.projects
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own projects" ON public.projects
+    FOR DELETE USING (auth.uid() = user_id);
+```
+
+## File Storage Strategy
+
+**Phase 1**: Store LaTeX content in `content` field
+**Future**: Add file attachments via Supabase Storage for images, references, etc.

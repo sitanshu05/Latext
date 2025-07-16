@@ -7,56 +7,33 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          variables?: Json
-          operationName?: string
-          query?: string
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
       projects: {
         Row: {
-          content: string
-          created_at: string
+          created_at: string | null
           id: string
-          title: string
-          updated_at: string
+          name: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          content?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          title: string
-          updated_at?: string
+          name: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          content?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          title?: string
-          updated_at?: string
+          name?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -195,11 +172,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

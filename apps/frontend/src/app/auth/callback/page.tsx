@@ -6,7 +6,6 @@ import Link from 'next/link'
 
 import { supabase } from '@/lib/services/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
 
 export default function AuthCallbackPage() {
@@ -18,19 +17,41 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Handle the OAuth callback
-        const { data, error } = await supabase.auth.getSession()
+        // Get the authorization code from the URL
+        const code = searchParams.get('code')
         
-        if (error) {
-          console.error('Auth callback error:', error)
-          setError(error.message)
+        if (code) {
+          // Exchange the code for a session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (error) {
+            console.error('Auth callback error:', error)
+            setError(error.message)
+            setLoading(false)
+            return
+          }
+
+          if (data.session) {
+            // Success - redirect to home or intended page
+            const redirectUrl = searchParams.get('redirect_url') || '/'
+            router.push(redirectUrl)
+            return
+          }
+        }
+
+        // If no code or session, check if there's already a session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Session check error:', sessionError)
+          setError(sessionError.message)
           setLoading(false)
           return
         }
 
-        if (data.session) {
-          // Success - redirect to dashboard or intended page
-          const redirectUrl = searchParams.get('redirect_url') || '/dashboard'
+        if (sessionData.session) {
+          // Already have a session, redirect to home
+          const redirectUrl = searchParams.get('redirect_url') || '/'
           router.push(redirectUrl)
         } else {
           // No session found, redirect to login
