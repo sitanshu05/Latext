@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { EditorComponent, type EditorTheme } from './EditorComponent'
-import { FileIcon, SaveIcon, MaximizeIcon, MinimizeIcon, ClockIcon, FolderIcon } from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { EditorComponent } from './EditorComponent'
+import { FileIcon, SaveIcon, MaximizeIcon, MinimizeIcon, ClockIcon, FolderIcon, AlertCircleIcon } from 'lucide-react'
+import { useAutoSave } from '@/lib/hooks/useAutoSave'
 
 // File metadata interface
 export interface FileMetadata {
@@ -35,6 +36,9 @@ const StatusBar: React.FC<{
   cursorLine: number
   cursorCol: number
   savedAt?: string | null
+  isSaving?: boolean
+  hasUnsavedChanges?: boolean
+  saveError?: string | null
   isFullScreen: boolean
   onToggleFullScreen: () => void
 }> = ({
@@ -46,6 +50,9 @@ const StatusBar: React.FC<{
   cursorLine,
   cursorCol,
   savedAt,
+  isSaving = false,
+  hasUnsavedChanges = false,
+  saveError = null,
   isFullScreen,
   onToggleFullScreen
 }) => (
@@ -69,8 +76,30 @@ const StatusBar: React.FC<{
         Ln {cursorLine}, Col {cursorCol}
       </div>
       
-      {savedAt && (
-        <div className="flex items-center space-x-1 text-gray-500">
+      {/* Save status indicators */}
+      {isSaving && (
+        <div className="flex items-center space-x-1 text-blue-600">
+          <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <span>Saving...</span>
+        </div>
+      )}
+      
+      {hasUnsavedChanges && !isSaving && (
+        <div className="flex items-center space-x-1 text-orange-600">
+          <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
+          <span>Unsaved</span>
+        </div>
+      )}
+      
+      {saveError && (
+        <div className="flex items-center space-x-1 text-red-600" title={saveError}>
+          <AlertCircleIcon className="w-3 h-3" />
+          <span>Save Error</span>
+        </div>
+      )}
+      
+      {savedAt && !isSaving && !hasUnsavedChanges && !saveError && (
+        <div className="flex items-center space-x-1 text-green-600">
           <ClockIcon className="w-3 h-3" />
           <span>Saved: {new Date(savedAt).toLocaleTimeString()}</span>
         </div>
@@ -122,10 +151,21 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 }) => {
   const [content, setContent] = useState<string>('')
   const [isFullScreen, setIsFullScreen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
-  const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 })
-  const editorRef = useRef<any>(null)
+  const [cursorPosition] = useState({ line: 1, col: 1 })
+
+  // Auto-save hook
+  const {
+    isSaving,
+    lastSavedAt,
+    hasUnsavedChanges,
+    saveError,
+    saveNow
+  } = useAutoSave({
+    content,
+    onSave,
+    debounceMs: 900,
+    enabled: !!file
+  })
 
   // Initialize content when file changes
   useEffect(() => {
@@ -142,18 +182,10 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     onContentChange?.(newContent)
   }, [onContentChange])
 
-  // Handle save
+  // Handle manual save
   const handleSave = useCallback(async () => {
-    setSaving(true)
-    try {
-      await onSave(content)
-      setLastSavedAt(new Date().toISOString())
-    } catch (error) {
-      console.error('Save failed:', error)
-    } finally {
-      setSaving(false)
-    }
-  }, [content, onSave])
+    await saveNow()
+  }, [saveNow])
 
   // Toggle fullscreen
   const toggleFullScreen = useCallback(() => {
@@ -218,11 +250,11 @@ export const FileEditor: React.FC<FileEditorProps> = ({
           {/* Save button */}
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={isSaving}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             <SaveIcon className="w-4 h-4" />
-            <span>{saving ? 'Saving...' : 'Save'}</span>
+            <span>{isSaving ? 'Saving...' : 'Save'}</span>
           </button>
         </div>
       </div>
@@ -258,6 +290,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
           cursorLine={cursorPosition.line}
           cursorCol={cursorPosition.col}
           savedAt={lastSavedAt}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+          saveError={saveError}
           isFullScreen={isFullScreen}
           onToggleFullScreen={toggleFullScreen}
         />

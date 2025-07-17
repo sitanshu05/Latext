@@ -164,4 +164,24 @@ export const deleteProject = async (id: string): Promise<{ success: boolean; err
   } catch (err) {
     return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
   }
+}
+
+export const updateFileContent = async (fileId: string, content: string): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    const { error } = await supabase
+      .from('files')
+      .update({
+        content,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', fileId)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, error: null }
+  } catch (err) {
+    return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
+  }
 } 

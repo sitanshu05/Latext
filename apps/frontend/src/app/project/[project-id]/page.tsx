@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { getProjectById, type ProjectWithFiles } from '@/lib/services/projects'
+import { getProjectById, updateFileContent, type ProjectWithFiles } from '@/lib/services/projects'
 import { FileEditor, type FileMetadata } from '@/components/editor/FileEditor'
 
 export default function ProjectPage({ params }: { params: Promise<{ 'project-id': string }> }) {
@@ -51,23 +51,22 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
   }
 
   const handleSave = async (content: string) => {
-    // TODO: Implement file saving (Task 6.5)
-    console.log('Save triggered for file:', currentFile?.name)
-    console.log('Content:', content)
-    
-    // Simulate save delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Update current file with new content
-    if (currentFile) {
-      setCurrentFile({
-        ...currentFile,
-        content,
-        updated_at: new Date().toISOString()
-      })
+    if (!currentFile) {
+      throw new Error('No file selected for saving')
     }
+
+    const { success, error } = await updateFileContent(currentFile.id, content)
     
-    console.log('File saved successfully!')
+    if (!success) {
+      throw new Error(error || 'Failed to save file')
+    }
+
+    // Update current file with new content and timestamp
+    setCurrentFile({
+      ...currentFile,
+      content,
+      updated_at: new Date().toISOString()
+    })
   }
 
   return (

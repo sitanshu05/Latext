@@ -15,8 +15,8 @@ import { bracketMatching } from '@codemirror/language'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { history } from '@codemirror/commands'
-import { latexLanguage } from './latex-language'
-import { createCustomTheme } from './custom-themes'
+import { latexLanguage } from '@/lib/editor/latex-language'
+import { createCustomTheme } from '@/lib/editor/custom-themes'
 
 // Theme configuration
 export type EditorTheme = 'light' | 'dark' | 'github-light' | 'github-dark' | 'vscode-light' | 'vscode-dark' | 'ocean' | 'forest' | 'sunset' | 'purple'
