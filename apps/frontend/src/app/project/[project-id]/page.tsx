@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react'
 import { getProjectById, type ProjectWithFiles } from '@/lib/services/projects'
-import EditorComponent from '@/components/editor/EditorComponent'
 
 export default function ProjectPage({ params }: { params: Promise<{ 'project-id': string }> }) {
   const resolvedParams = use(params)
@@ -48,7 +47,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
   }
 
   const handleFind = () => {
-    // Monaco Editor will handle find internally
+    // Find functionality
     console.log('Find triggered')
   }
 
@@ -63,7 +62,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
             <small>Created: {project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Unknown'}</small>
           </div>
 
-          {/* Monaco Editor Section */}
+          {/* Editor Section */}
           {currentFileName && (
             <div style={{ marginBottom: '20px' }}>
               <div style={{ 
@@ -98,23 +97,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
               </div>
               
               <div style={{ border: '1px solid #ccc', borderRadius: '0 0 5px 5px' }}>
-                <EditorComponent
-                  value={currentFileContent}
-                  language="latex"
-                  theme="vs-light"
-                  height="500px"
-                  config={{
-                    fontSize: 14,
-                    fontFamily: 'Monaco, "Lucida Console", Courier, monospace',
-                    tabSize: 2,
-                    minimap: false,
-                    lineNumbers: 'on',
-                    wordWrap: 'on'
-                  }}
-                  onChange={handleContentChange}
-                  onSave={handleSave}
-                  onFind={handleFind}
-                />
+                <textarea name="editor" id="editor" value={currentFileContent} onChange={(e)=>handleContentChange(e.target.value)}></textarea>
               </div>
             </div>
           )}
