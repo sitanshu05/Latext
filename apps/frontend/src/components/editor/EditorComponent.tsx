@@ -68,7 +68,7 @@ const defaultConfig: EditorConfigOptions = {
 
 // Loading component
 const EditorLoading: React.FC = () => (
-  <div className="flex items-center justify-center h-96 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+  <div className="flex items-center justify-center h-96 bg-gray-50 dark:bg-gray-900 rounded-lg">
     <div className="text-center space-y-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
       <p className="text-gray-600 dark:text-gray-400">Loading Editor...</p>
@@ -78,7 +78,7 @@ const EditorLoading: React.FC = () => (
 
 // Error component
 const EditorError: React.FC<{ error: string }> = ({ error }) => (
-  <div className="flex items-center justify-center h-96 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+  <div className="flex items-center justify-center h-96 bg-red-50 dark:bg-red-900/20 rounded-lg">
     <div className="text-center space-y-4 max-w-md">
       <div className="text-red-600 dark:text-red-400">
         <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,13 +233,20 @@ export const EditorComponent: React.FC<EditorComponentProps> = ({
           minHeight: '200px',
         },
         '.cm-focused': {
-          outline: 'none',
+          outline: 'none !important',
         },
         '.cm-editor': {
           borderRadius: '8px',
+          outline: 'none !important',
+        },
+        '.cm-editor.cm-focused': {
+          outline: 'none !important',
         },
         '.cm-scroller': {
           fontFamily: mergedConfig.fontFamily || 'monospace',
+        },
+        '.cm-editor *': {
+          outline: 'none !important',
         },
       }),
     ]
@@ -295,7 +302,7 @@ export const EditorComponent: React.FC<EditorComponentProps> = ({
           extensions={createExtensions()}
           onChange={handleChange}
           readOnly={mergedConfig.readOnly}
-          className="border rounded-lg"
+          className="rounded-lg"
         />
     </div>
   )

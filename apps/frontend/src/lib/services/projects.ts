@@ -184,4 +184,142 @@ export const updateFileContent = async (fileId: string, content: string): Promis
   } catch (err) {
     return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
   }
+}
+
+export const createFile = async (projectId: string, fileName: string, fileType: string = 'tex'): Promise<{ file: File | null; error: string | null }> => {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { file: null, error: 'User not authenticated' }
+    }
+
+    // Check if user owns the project
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', projectId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (projectError || !project) {
+      return { file: null, error: 'Project not found or access denied' }
+    }
+
+    // Create default content based on file type
+    let defaultContent = ''
+    if (fileType === 'tex') {
+      defaultContent = `% ${fileName}\n\n`
+    } else if (fileType === 'bib') {
+      defaultContent = `% Bibliography file: ${fileName}\n\n`
+    }
+
+    const fileData: FileInsert = {
+      project_id: projectId,
+      name: fileName,
+      path: `/${fileName}`,
+      content: defaultContent,
+      storage_path: `${projectId}/${fileName}`,
+      file_type: fileType,
+      mime_type: fileType === 'tex' ? 'text/plain' : 'text/plain'
+    }
+
+    const { data: newFile, error: fileError } = await supabase
+      .from('files')
+      .insert(fileData)
+      .select()
+      .single()
+
+    if (fileError) {
+      return { file: null, error: fileError.message }
+    }
+
+    return { file: newFile, error: null }
+  } catch (err) {
+    return { file: null, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
+  }
+}
+
+export const renameFile = async (fileId: string, newName: string): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { success: false, error: 'User not authenticated' }
+    }
+
+    // Check if user owns the file (via project)
+    const { data: file, error: fileError } = await supabase
+      .from('files')
+      .select(`
+        id,
+        project_id,
+        projects!inner(user_id)
+      `)
+      .eq('id', fileId)
+      .eq('projects.user_id', user.id)
+      .single()
+
+    if (fileError || !file) {
+      return { success: false, error: 'File not found or access denied' }
+    }
+
+    // Update file name
+    const { error: updateError } = await supabase
+      .from('files')
+      .update({
+        name: newName,
+        path: `/${newName}`,
+        storage_path: `${file.project_id}/${newName}`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', fileId)
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    return { success: true, error: null }
+  } catch (err) {
+    return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
+  }
+}
+
+export const deleteFile = async (fileId: string): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return { success: false, error: 'User not authenticated' }
+    }
+
+    // Check if user owns the file (via project)
+    const { data: file, error: fileError } = await supabase
+      .from('files')
+      .select(`
+        id,
+        projects!inner(user_id)
+      `)
+      .eq('id', fileId)
+      .eq('projects.user_id', user.id)
+      .single()
+
+    if (fileError || !file) {
+      return { success: false, error: 'File not found or access denied' }
+    }
+
+    // Delete file
+    const { error: deleteError } = await supabase
+      .from('files')
+      .delete()
+      .eq('id', fileId)
+
+    if (deleteError) {
+      return { success: false, error: deleteError.message }
+    }
+
+    return { success: true, error: null }
+  } catch (err) {
+    return { success: false, error: `Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}` }
+  }
 } 

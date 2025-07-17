@@ -236,32 +236,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 
   return (
     <div className={`file-editor ${className} ${isFullScreen ? 'fixed inset-0 z-50 bg-white dark:bg-gray-900' : ''}`}>
-      {/* Editor header */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 border-b">
-        <div className="flex items-center space-x-3">
-          <FileIcon className="w-5 h-5 text-blue-500" />
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{file.name}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{file.file_type.toUpperCase()} Document</p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          {/* Save button */}
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <SaveIcon className="w-4 h-4" />
-            <span>{isSaving ? 'Saving...' : 'Save'}</span>
-          </button>
-        </div>
-      </div>
-
       {/* Editor */}
-      <div className={`editor-container ${isFullScreen ? 'h-screen' : 'h-96'} flex flex-col`}>
-        <div className="flex-1">
+      <div className={`editor-container ${isFullScreen ? 'h-screen' : 'h-full'} flex flex-col overflow-hidden`}>
+        <div className="flex-1 overflow-auto">
                      <EditorComponent
              value={content}
              onChange={handleContentChange}

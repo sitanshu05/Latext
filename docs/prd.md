@@ -22,11 +22,14 @@ Researchers face challenges with:
 
 ## 🛠️ Core Features (v1)
 
-### ✍️ LaTeX Editor
-- Monaco Editor (VS Code-like)
-- Syntax highlighting for LaTeX
-- Auto-save with version control
-- Snippet support (e.g., `\cite`, `\figure`)
+### ✍️ LaTeX Editor ✅ **IMPLEMENTED**
+- CodeMirror Editor (VS Code-like experience)
+- LaTeX syntax highlighting with custom language definition
+- Auto-save with 900ms debounce and real-time status indicators
+- LaTeX command autocompletion (50+ commands)
+- Multiple themes (Light, Dark, GitHub, VS Code)
+- Keyboard shortcuts (Ctrl/Cmd+S, Ctrl/Cmd+F, Ctrl/Cmd+B, Ctrl/Cmd+I)
+- Professional file editing interface with status bar
 
 ### 👁️ Real-time Preview
 - KaTeX or MathJax for math rendering
@@ -48,7 +51,8 @@ Researchers face challenges with:
 - Supabase Auth (email/magic link)
 - Save projects by user
 - Load previous projects easily
-- **NEW**: File management system with automatic min.tex creation
+- **File Management**: Automatic main.tex creation with LaTeX template
+- **Auto-save**: Real-time file persistence with status indicators
 
 ---
 
@@ -56,7 +60,7 @@ Researchers face challenges with:
 
 | Layer        | Technology                    | Status |
 |--------------|-------------------------------|---------|
-| Frontend     | Next.js + Monaco + Tailwind   | ✅ Partial |
+| Frontend     | Next.js + CodeMirror + Tailwind | ✅ Complete |
 | Auth & DB    | Supabase                      | ✅ Complete |
 | Backend API  | FastAPI                       | 🚧 Planned |
 | AI Services  | Gemini / GPT-4 APIs           | 🚧 Planned |
@@ -114,34 +118,36 @@ CREATE TABLE files (
 ```
 
 **Key Features:**
-- Every project automatically gets a `min.tex` file with starter template
-- File content stored directly in database for now
+- Every project automatically gets a `main.tex` file with LaTeX template
+- File content stored directly in database with real-time auto-save
 - Proper RLS policies for user isolation
 - Cascade deletion maintains data consistency
+- Professional editor with syntax highlighting and autocompletion
 
 ---
 
 ## 🎯 Current Implementation Status
 
-### ✅ **Completed (v0.1)**
+### ✅ **Completed (v0.2)**
 - **Project Management**: Full CRUD operations
-- **File System**: Automatic min.tex creation with LaTeX template
+- **File System**: Automatic main.tex creation with LaTeX template
 - **Authentication**: Supabase Auth integration
 - **Database**: Projects and Files tables with RLS
-- **UI**: Basic project listing and creation interface
+- **LaTeX Editor**: CodeMirror with syntax highlighting and autocompletion
+- **Auto-save**: Real-time file persistence with status indicators
+- **UI**: Professional project listing and file editing interface
 - **Type Safety**: Full TypeScript integration with generated Supabase types
 
 ### 🚧 **In Progress**
-- Monaco Editor integration
-- File editing interface
-- Real-time preview
+- Multiple file management (file switching, tabs)
+- Real-time preview with KaTeX/MathJax
 
-### 🔮 **Planned (v0.2+)**
+### 🔮 **Planned (v0.3+)**
 - PDF compilation (Tectonic)
 - AI writing assistance
 - Citation management
-- Advanced file management (multiple files per project)
 - Real-time collaboration
+- Advanced LaTeX templates
 
 ---
 

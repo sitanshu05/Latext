@@ -120,3 +120,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Remove focus outlines from CodeMirror editor */
+.cm-editor,
+.cm-editor *,
+.cm-editor.cm-focused,
+.cm-editor.cm-focused * {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove any dotted borders from CodeMirror */
+.cm-editor {
+  border: none !important;
+}
+
+.cm-editor .cm-content {
+  outline: none !important;
+  border: none !important;
+}
