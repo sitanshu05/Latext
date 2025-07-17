@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { getProjectById, type ProjectWithFiles } from '@/lib/services/projects'
+import { FileEditor, type FileMetadata } from '@/components/editor/FileEditor'
 
 export default function ProjectPage({ params }: { params: Promise<{ 'project-id': string }> }) {
   const resolvedParams = use(params)
@@ -9,8 +10,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
 
   const [project, setProject] = useState<ProjectWithFiles | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentFileContent, setCurrentFileContent] = useState<string>('')
-  const [currentFileName, setCurrentFileName] = useState<string>('')
+  const [currentFile, setCurrentFile] = useState<FileMetadata | null>(null)
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -21,8 +21,15 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
         // Set the first file as the current file for editing
         if (data.files && data.files.length > 0) {
           const firstFile = data.files[0]
-          setCurrentFileContent(firstFile.content)
-          setCurrentFileName(firstFile.name)
+          setCurrentFile({
+            id: firstFile.id,
+            name: firstFile.name,
+            file_type: firstFile.file_type,
+            size: firstFile.content.length,
+            created_at: firstFile.created_at,
+            updated_at: firstFile.updated_at,
+            content: firstFile.content
+          })
         }
       }
       if (error) {
@@ -33,22 +40,34 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
     fetchProject()
   }, [projectId])
 
-  const handleContentChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setCurrentFileContent(value)
+  const handleContentChange = (content: string) => {
+    if (currentFile) {
+      setCurrentFile({
+        ...currentFile,
+        content,
+        updated_at: new Date().toISOString()
+      })
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async (content: string) => {
     // TODO: Implement file saving (Task 6.5)
-    console.log('Save triggered for file:', currentFileName)
-    console.log('Content:', currentFileContent)
-    alert('Save functionality will be implemented in Task 6.5!')
-  }
-
-  const handleFind = () => {
-    // Find functionality
-    console.log('Find triggered')
+    console.log('Save triggered for file:', currentFile?.name)
+    console.log('Content:', content)
+    
+    // Simulate save delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Update current file with new content
+    if (currentFile) {
+      setCurrentFile({
+        ...currentFile,
+        content,
+        updated_at: new Date().toISOString()
+      })
+    }
+    
+    console.log('File saved successfully!')
   }
 
   return (
@@ -62,43 +81,16 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
             <small>Created: {project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Unknown'}</small>
           </div>
 
-          {/* Editor Section */}
-          {currentFileName && (
+          {/* Enhanced File Editor */}
+          {currentFile && (
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                padding: '10px',
-                backgroundColor: '#f5f5f5',
-                border: '1px solid #ccc',
-                borderBottom: 'none',
-                borderRadius: '5px 5px 0 0'
-              }}>
-                <div>
-                  <strong>Editing: {currentFileName}</strong> ({project.files?.find(f => f.name === currentFileName)?.file_type})
-                </div>
-                <div>
-                  <button 
-                    onClick={handleSave}
-                    style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#007acc',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Save (Ctrl+S)
-                  </button>
-                </div>
-              </div>
-              
-              <div style={{ border: '1px solid #ccc', borderRadius: '0 0 5px 5px' }}>
-                <textarea name="editor" id="editor" value={currentFileContent} onChange={(e)=>handleContentChange(e.target.value)}></textarea>
-              </div>
+              <FileEditor
+                file={currentFile}
+                onSave={handleSave}
+                onContentChange={handleContentChange}
+                loading={loading}
+                className="enhanced-file-editor"
+              />
             </div>
           )}
           
@@ -115,13 +107,16 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
                     padding: '10px', 
                     border: '1px solid #e0e0e0', 
                     borderRadius: '3px',
-                    backgroundColor: file.name === currentFileName ? '#e3f2fd' : '#f9f9f9'
+                    backgroundColor: file.id === currentFile?.id ? '#e3f2fd' : '#f9f9f9'
                   }}>
                     <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
                       {file.name} ({file.file_type})
                     </div>
                     <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
                       {file.content.length} characters
+                      {file.updated_at && (
+                        <span> • Modified: {new Date(file.updated_at).toLocaleDateString()}</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -129,7 +124,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
             </details>
           )}
 
-          {!currentFileName && (
+          {!currentFile && (
             <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
               No files found for this project.
             </div>

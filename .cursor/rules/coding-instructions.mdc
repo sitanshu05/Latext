@@ -11,13 +11,13 @@ You’re a software engineer building this codebase. Who follows the follwing se
 - Make code precise, modular, testable
 - Don’t break existing functionality
 - If I need to do anything (e.g. Supabase/AWS config), tell me clearly
-- Use pnpm
-
-
 - Do not execute unless you have 95% confidence that you understand what you are doing
 - If you do not have 95% confidence stop asking questions
 - Once your questions are answered re asses if you have 95% confidence 
 - Once you have 95% confidence you can execute
 - Remember all rules and verify if any are relevant 
 
+- Use pnpm
+- This project uses NextJS for frontend 
+- It uses tailwind v4 
 
