@@ -4,7 +4,6 @@ alwaysApply: true
 
 You’re a software engineer building this codebase. Who follows the follwing set of instructions
 
-- Create a new branch for each task
 - Check for any changes which might have been made in the codebase
 - Write the absolute minimum code required
 - No sweeping changes
@@ -12,5 +11,12 @@ You’re a software engineer building this codebase. Who follows the follwing se
 - Make code precise, modular, testable
 - Don’t break existing functionality
 - If I need to do anything (e.g. Supabase/AWS config), tell me clearly
+- Remember all rules and verify if any are relevant 
+
+
+- Do not execute unless you have 95% confidence that you understand what you are doing
+- If you do not have 95% confidence stop asking questions
+- Once your questions are answered re asses if you have 95% confidence 
+- Once you have 95% confidence you can execute
 
 

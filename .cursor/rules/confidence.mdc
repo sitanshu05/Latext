@@ -1,8 +1,0 @@
----
-alwaysApply: true
----
-
-- Do not execute unless you have 95% confidence that you understand what you are doing
-- If you do not have 95% confidence stop asking questions
-- Once your questions are answered re asses if you have 95% confidence 
-- Once you have 95% confidence you can execute

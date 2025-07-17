@@ -1,6 +1,6 @@
-CREATE TABLE IF NOT EXISTS public.files (
+CREATE TABLE IF NOT EXISTS files (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     path TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS public.files (
 );
 
 
-ALTER TABLE public.files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE files ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Enable full access to files if user owns the project"
-ON public.files
+ON files
 AS PERMISSIVE
 FOR ALL
 TO authenticated

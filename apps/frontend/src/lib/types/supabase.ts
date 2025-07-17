@@ -7,16 +7,59 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
   public: {
     Tables: {
+      files: {
+        Row: {
+          content: string
+          created_at: string | null
+          file_type: string
+          id: string
+          mime_type: string
+          name: string
+          path: string
+          project_id: string
+          storage_path: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          file_type: string
+          id?: string
+          mime_type: string
+          name: string
+          path: string
+          project_id: string
+          storage_path: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          file_type?: string
+          id?: string
+          mime_type?: string
+          name?: string
+          path?: string
+          project_id?: string
+          storage_path?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string | null
+          description: string | null
           id: string
           name: string
           updated_at: string | null
@@ -24,6 +67,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
           id?: string
           name: string
           updated_at?: string | null
@@ -31,6 +75,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           id?: string
           name?: string
           updated_at?: string | null
@@ -176,3 +221,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
