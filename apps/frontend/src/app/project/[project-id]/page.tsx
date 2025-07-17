@@ -2,6 +2,8 @@
 
 import { useState, useEffect, use } from 'react'
 import { getProjectById, type ProjectWithFiles } from '@/lib/services/projects'
+import { ThreePaneLayout } from '@/components/editor/ThreePaneLayout'
+import { type FileMetadata } from '@/components/editor/FileEditor'
 
 export default function ProjectPage({ params }: { params: Promise<{ 'project-id': string }> }) {
   const resolvedParams = use(params)
@@ -9,8 +11,7 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
 
   const [project, setProject] = useState<ProjectWithFiles | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentFileContent, setCurrentFileContent] = useState<string>('')
-  const [currentFileName, setCurrentFileName] = useState<string>('')
+  const [files, setFiles] = useState<FileMetadata[]>([])
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -18,11 +19,18 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
       const { project: data, error } = await getProjectById(projectId)
       if (data) {
         setProject(data)
-        // Set the first file as the current file for editing
+        // Convert project files to FileMetadata format
         if (data.files && data.files.length > 0) {
-          const firstFile = data.files[0]
-          setCurrentFileContent(firstFile.content)
-          setCurrentFileName(firstFile.name)
+          const fileMetadata: FileMetadata[] = data.files.map(file => ({
+            id: file.id,
+            name: file.name,
+            file_type: file.file_type,
+            size: file.content.length,
+            created_at: file.created_at,
+            updated_at: file.updated_at,
+            content: file.content
+          }))
+          setFiles(fileMetadata)
         }
       }
       if (error) {
@@ -33,110 +41,38 @@ export default function ProjectPage({ params }: { params: Promise<{ 'project-id'
     fetchProject()
   }, [projectId])
 
-  const handleContentChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setCurrentFileContent(value)
-    }
-  }
-
-  const handleSave = () => {
-    // TODO: Implement file saving (Task 6.5)
-    console.log('Save triggered for file:', currentFileName)
-    console.log('Content:', currentFileContent)
-    alert('Save functionality will be implemented in Task 6.5!')
-  }
-
-  const handleFind = () => {
-    // Find functionality
-    console.log('Find triggered')
+  const handleFilesChange = (newFiles: FileMetadata[]) => {
+    setFiles(newFiles)
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="h-screen">
       {loading ? (
-        <div>Loading...</div>
-      ) : project ? (
-        <div>
-          <h1>{project.name}</h1>
-          <div style={{ marginBottom: '20px' }}>
-            <small>Created: {project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Unknown'}</small>
-          </div>
-
-          {/* Editor Section */}
-          {currentFileName && (
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                padding: '10px',
-                backgroundColor: '#f5f5f5',
-                border: '1px solid #ccc',
-                borderBottom: 'none',
-                borderRadius: '5px 5px 0 0'
-              }}>
-                <div>
-                  <strong>Editing: {currentFileName}</strong> ({project.files?.find(f => f.name === currentFileName)?.file_type})
-                </div>
-                <div>
-                  <button 
-                    onClick={handleSave}
-                    style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#007acc',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Save (Ctrl+S)
-                  </button>
-                </div>
-              </div>
-              
-              <div style={{ border: '1px solid #ccc', borderRadius: '0 0 5px 5px' }}>
-                <textarea name="editor" id="editor" value={currentFileContent} onChange={(e)=>handleContentChange(e.target.value)}></textarea>
-              </div>
-            </div>
-          )}
-          
-          {/* File List (for reference/debugging) */}
-          {project.files && project.files.length > 0 && (
-            <details style={{ marginTop: '20px' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>
-                All Files ({project.files.length})
-              </summary>
-              <div>
-                {project.files.map((file) => (
-                  <div key={file.id} style={{ 
-                    marginBottom: '10px', 
-                    padding: '10px', 
-                    border: '1px solid #e0e0e0', 
-                    borderRadius: '3px',
-                    backgroundColor: file.name === currentFileName ? '#e3f2fd' : '#f9f9f9'
-                  }}>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
-                      {file.name} ({file.file_type})
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                      {file.content.length} characters
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
-
-          {!currentFileName && (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-              No files found for this project.
-            </div>
-          )}
+        <div className="flex items-center justify-center h-full">
+          <div className="text-lg">Loading project...</div>
         </div>
+      ) : project ? (
+        <>
+          {/* Three-Pane Layout */}
+          <div className="h-full">
+            {files.length > 0 ? (
+              <ThreePaneLayout
+                projectId={projectId}
+                files={files}
+                onFilesChange={handleFilesChange}
+                className="h-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No files found for this project.
+              </div>
+            )}
+          </div>
+        </>
       ) : (
-        <div>Project not found.</div>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-lg text-red-600">Project not found.</div>
+        </div>
       )}
     </div>
   )
